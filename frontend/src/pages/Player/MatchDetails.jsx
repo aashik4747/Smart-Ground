@@ -15,25 +15,21 @@ export default function MatchDetails() {
     const [match, setMatch] = useState(null);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
 
     useEffect(() => {
         const fetchMatch = async () => {
             try {
                 setLoading(true);
-                console.log("Fetching match details for ID:", id);
                 const res = await getMatchDetails(id);
-                console.log("Match details response:", res);
                 if (!res.data) {
                     throw new Error("No match data received");
                 }
                 setMatch(res.data);
             } catch (error) {
                 console.error("Failed to fetch match details:", error);
-                console.error("Error response:", error.response);
-                console.error("Error message:", error.message);
-                console.error("Error status:", error.response?.status);
                 addNotification("Failed to load match details", "error");
-                setMatch(null); // Ensure match is null on error
+                setMatch(null);
             } finally {
                 setLoading(false);
             }
@@ -41,19 +37,15 @@ export default function MatchDetails() {
         fetchMatch();
     }, [id, addNotification]);
 
-    const [showPaymentModal, setShowPaymentModal] = useState(false);
-    
-    // Instead of straight-to-API, we intercept requiring payment confirmation
-    // Instead of straight-to-API, we intercept requiring payment confirmation
-    const triggerJoin = () => {
-        if (isFull) {
-            handleJoin(); // Bypass payment for waitlist
-        } else if (match.pricePerPlayer > 0) {
-            setShowPaymentModal(true);
-        } else {
-            handleJoin();
-        }
-    };
+    const joinedCount = match?.joinedPlayers?.length || 0;
+    const maxPlayers = match?.requiredPlayers || 0;
+    const isFull = joinedCount >= maxPlayers;
+    const progress = (joinedCount / maxPlayers) * 100;
+    const userId = user?._id || user?.id;
+    const isHost = match?.host?._id === userId;
+    const isJoined = match?.joinedPlayers?.some(p => p._id === userId);
+    const isWaitlisted = match?.waitlistedPlayers?.some(p => p._id === userId || p === userId);
+    const isCancelled = match?.status === "cancelled";
 
     const handleJoin = async () => {
         setActionLoading(true);
@@ -97,7 +89,7 @@ export default function MatchDetails() {
         try {
             await cancelMatch(id);
             addNotification("Match has been cancelled.", "success");
-            navigate("/player/my-matches");
+            navigate("/user/my-matches");
         } catch (error) {
             console.error("Failed to cancel match", error);
             addNotification(error.response?.data?.message || "Failed to cancel match.", "error");
@@ -115,12 +107,20 @@ export default function MatchDetails() {
                 await api.post(`/users/${playerId}/follow`);
                 addNotification("Following player!", "success");
             }
-            
-            // Re-fetch match to instantly display updated followers accurately
             const res = await getMatchDetails(id);
             setMatch(res.data);
         } catch (error) {
             addNotification("Failed to modify network map", "error");
+        }
+    };
+
+    const triggerJoin = () => {
+        if (isFull) {
+            handleJoin();
+        } else if (match.pricePerPlayer > 0) {
+            setShowPaymentModal(true);
+        } else {
+            handleJoin();
         }
     };
 
@@ -144,37 +144,9 @@ export default function MatchDetails() {
         </div>
     );
 
-    // Safety check to ensure match has required properties
-    if (!match._id) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex flex-col">
-                <Navbar />
-                <div className="flex-grow flex justify-center items-center">
-                    <p className="text-gray-500 text-lg">Invalid match data.</p>
-                </div>
-                <Footer />
-            </div>
-        );
-    }
-
-    const joinedCount = match.joinedPlayers?.length || 0;
-    const maxPlayers = match.requiredPlayers || 0;
-    const isFull = joinedCount >= maxPlayers;
-    const progress = (joinedCount / maxPlayers) * 100;
-
-    // Auth checks
-    // Auth checks
-    const userId = user?._id || user?.id;
-    const isHost = match.host?._id === userId;
-    const isJoined = match.joinedPlayers?.some(p => p._id === userId);
-    const isWaitlisted = match.waitlistedPlayers?.some(p => p._id === userId || p === userId);
-    const isCancelled = match.status === "cancelled";
-
-    try {
-        return (
+    return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <Navbar />
-
             <div className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
                 {isCancelled && (
                     <div className="bg-red-50 text-red-700 p-4 rounded-xl mb-6 border border-red-100 font-medium">
@@ -182,8 +154,7 @@ export default function MatchDetails() {
                     </div>
                 )}
 
-                {/* Header Card */}
-                <div className="bg-white rounded-3xl shadow-xl overflow-hidden mb-8 animate-fade-in-up">
+                <div className="bg-white rounded-3xl shadow-xl overflow-hidden mb-8">
                     <div className="bg-indigo-900 h-32 sm:h-48 relative">
                         <div className="absolute inset-0 bg-gradient-to-r from-indigo-900 to-purple-800 opacity-90"></div>
                         <div className="absolute bottom-0 left-0 p-8">
@@ -268,8 +239,7 @@ export default function MatchDetails() {
                     </div>
                 </div>
 
-                {/* Players List */}
-                <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden animate-fade-in-up animation-delay-200 mb-12">
+                <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden mb-12">
                     <div className="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                         <div className="flex gap-4 items-center">
                             <h3 className="text-lg font-bold text-gray-900">Players Joined ({joinedCount}/{maxPlayers})</h3>
@@ -341,13 +311,12 @@ export default function MatchDetails() {
                 </div>
             </div>
 
-            {/* Split Payment Modal Simulator */}
             {showPaymentModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm animate-fade-in">
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-slide-up">
                         <div className="bg-indigo-600 p-6 text-white text-center">
                             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/20 backdrop-blur-md mb-4 border-2 border-white/30">
-                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08.402-2.599-1M21 12 a9 0 0111-18 0 9 0 0118 0z"></path></svg>
                             </div>
                             <h2 className="text-2xl font-bold">Checkout: Join Match</h2>
                             <p className="text-indigo-100 mt-2 opacity-90">Host is requesting a split to confirm your spot.</p>
@@ -357,7 +326,6 @@ export default function MatchDetails() {
                                 <span className="text-gray-500 font-medium">Split Amount</span>
                                 <span className="text-2xl font-black text-gray-900">₹{match.pricePerPlayer}</span>
                             </div>
-
                             <button
                                 onClick={handleJoin}
                                 disabled={actionLoading}
@@ -371,9 +339,7 @@ export default function MatchDetails() {
                                         </svg>
                                         Processing...
                                     </>
-                                ) : (
-                                    "Confirm Payment"
-                                )}
+                                ) : "Confirm Payment"}
                             </button>
                             <button
                                 onClick={() => setShowPaymentModal(false)}
@@ -382,9 +348,6 @@ export default function MatchDetails() {
                             >
                                 Cancel
                             </button>
-                            <p className="text-center text-xs text-gray-400 mt-6 font-medium">
-                                Payments are securely simulated for this demo iteration.
-                            </p>
                         </div>
                     </div>
                 </div>
@@ -392,17 +355,5 @@ export default function MatchDetails() {
 
             <Footer />
         </div>
-        );
-    } catch (error) {
-        console.error("Render error in MatchDetails:", error);
-        return (
-            <div className="min-h-screen bg-gray-50 flex flex-col">
-                <Navbar />
-                <div className="flex-grow flex justify-center items-center">
-                    <p className="text-gray-500 text-lg">Error loading match details.</p>
-                </div>
-                <Footer />
-            </div>
-        );
-    }
+    );
 }

@@ -13,10 +13,7 @@ exports.getBookedSlots = async (req, res) => {
             status: { $in: ['confirmed', 'pending'] }
         });
 
-        const bookedTimes = bookings.map(b => ({
-            startTime: b.startTime,
-            endTime: b.endTime
-        }));
+        const bookedTimes = bookings.map(b => `${b.startTime} - ${b.endTime}`);
 
         res.json({ bookedTimes });
     } catch (error) {
@@ -90,7 +87,7 @@ exports.createBooking = async (req, res) => {
                 description: "Auto-generated community match from booking slot.",
                 host: req.user.id,
                 joinedPlayers: [req.user.id],
-                status: "pending",
+                status: "open",
                 isPrivate: isPrivate || false,
                 pricePerPlayer: pricePerPlayer || 0
             });

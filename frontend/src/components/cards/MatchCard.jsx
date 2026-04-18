@@ -97,7 +97,7 @@ export default function MatchCard({ match, isMyMatch = false }) {
                     </span>
                 ) : (
                     <Link
-                        to={`/player/match/${match._id}`}
+                        to={`/user/match/${match._id}`}
                         className={`inline-flex items-center px-5 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm transition-all transform active:scale-95 ${actionBtn.style}`}
                     >
                         {actionBtn.text}
