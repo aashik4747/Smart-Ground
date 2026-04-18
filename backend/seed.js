@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const dotenv = require("dotenv");
 const User = require("./models/User");
 const Venue = require("./models/Venue");
 const Ground = require("./models/Ground");
@@ -8,7 +9,9 @@ const Booking = require("./models/Booking");
 const MatchRequest = require("./models/MatchRequest");
 const Payment = require("./models/Payment");
 
-mongoose.connect("mongodb://127.0.0.1:27017/smart-booking-system")
+dotenv.config();
+
+mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("MongoDB Connected for Comprehensive Seeding"))
     .catch(err => console.log("Mongo Connection Error: ", err));
 
