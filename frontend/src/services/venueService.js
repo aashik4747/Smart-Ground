@@ -21,7 +21,10 @@ export const getAllVenues = (search, state, city, sport, lat, lng, maxDistance) 
         queryString = `?${params.join('&')}`;
     }
     
-    return API.get(`/venues${queryString}`);
+    return API.get(`/venues${queryString}`).then(res => {
+        // Backend returns venues directly as array, not wrapped in response.data
+        return { data: Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : []) };
+    });
 };
 
 // Get single venue by ID

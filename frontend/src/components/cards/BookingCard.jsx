@@ -10,8 +10,10 @@ export default function BookingCard({ booking }) {
     };
 
     const displayImage = useMemo(() => {
-        return getSportImage(booking.ground?.imageUrl, booking.sport || booking.ground?.sport, booking.ground?._id);
-    }, [booking.ground?.imageUrl, booking.sport, booking.ground?.sport, booking.ground?._id]);
+        const venue = booking.venueId;
+        const sport = venue?.sports?.[0] || booking.sport;
+        return getSportImage(venue?.images?.[0], sport, venue?._id, venue?.name);
+    }, [booking.venueId, booking.sport]);
 
     return (
         <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 p-5 flex flex-col md:flex-row md:items-center justify-between gap-6 group">
@@ -19,14 +21,14 @@ export default function BookingCard({ booking }) {
                 <div className="w-20 h-20 rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden shadow-inner relative">
                     <img
                         src={displayImage}
-                        alt="Ground"
+                        alt="Venue"
                         className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors"></div>
                 </div>
                 <div>
-                    <h3 className="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{booking.ground?.name || "Ground Name"}</h3>
-                    <p className="text-sm font-medium text-gray-500 mb-2">{booking.sport || "N/A"}</p>
+                    <h3 className="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{booking.venueId?.name || "Venue Name"}</h3>
+                    <p className="text-sm font-medium text-gray-500 mb-2">{booking.venueId?.sports?.[0] || booking.sport || "N/A"}</p>
 
                     <div className="flex flex-col sm:flex-row sm:items-center text-sm text-gray-600 gap-1 sm:gap-4">
                         <span className="flex items-center">
@@ -48,7 +50,7 @@ export default function BookingCard({ booking }) {
                 </span>
                 <div className="text-right">
                     <div className="text-sm text-gray-400 mb-0.5">Total</div>
-                    <span className="text-xl font-bold text-gray-900">₹{booking.price}</span>
+                    <span className="text-xl font-bold text-gray-900">₹{booking.totalPrice || booking.price}</span>
                 </div>
             </div>
         </div>

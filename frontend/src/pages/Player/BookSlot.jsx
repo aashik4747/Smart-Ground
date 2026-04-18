@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../../components/common/Navbar";
 import Footer from "../../components/common/Footer";
 import { bookSlot } from "../../services/bookingService";
-import { getGroundDetails } from "../../services/groundService";
+import { getVenueById } from "../../services/venueService";
 import { useNotification } from "../../context/NotificationContext";
 
 export default function BookSlot() {
@@ -11,10 +11,17 @@ export default function BookSlot() {
     const navigate = useNavigate();
     const { addNotification } = useNotification();
 
-    const [ground, setGround] = useState(null);
-    const [date, setDate] = useState("");
-    const [startTime, setStartTime] = useState("");
-    const [endTime, setEndTime] = useState("");
+    const [venue, setVenue] = useState(null);
+    
+    // Initialize with current date and time to prevent controlled/uncontrolled warning
+    const now = new Date();
+    const currentDate = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+    const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
+    const initialEndTime = new Date(now.getTime() + 60 * 60 * 1000).toTimeString().slice(0, 5);
+    
+    const [date, setDate] = useState(currentDate);
+    const [startTime, setStartTime] = useState(currentTime);
+    const [endTime, setEndTime] = useState(initialEndTime);
     const [sport, setSport] = useState("");
     const [loading, setLoading] = useState(false);
     const [bookedSlots, setBookedSlots] = useState([]); // newly added component
@@ -30,7 +37,7 @@ export default function BookSlot() {
         if (!date || !id) return;
 
         // basic fetch request avoiding Axios config conflicts if missing manually
-        fetch(`http://localhost:5000/api/bookings/slots?groundId=${id}&date=${date}`, {
+        fetch(`http://localhost:5000/api/bookings/slots?venueId=${id}&date=${date}`, {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`
             }
@@ -45,10 +52,12 @@ export default function BookSlot() {
     }, [date, id]);
 
     useEffect(() => {
-        getGroundDetails(id)
+        getVenueById(id)
             .then(res => {
-                setGround(res.data);
-                if (res.data.sport) setSport(res.data.sport);
+                setVenue(res.data);
+                if (res.data.sports && res.data.sports.length > 0) {
+                    setSport(res.data.sports[0]);
+                }
             })
             .catch(err => console.error(err));
     }, [id]);
@@ -77,7 +86,7 @@ export default function BookSlot() {
         setLoading(true);
         try {
             await bookSlot({
-                groundId: id,
+                venueId: id,
                 date,
                 startTime,
                 endTime,
@@ -88,7 +97,7 @@ export default function BookSlot() {
                 isPrivate: hostMatch ? isPrivate : undefined
             });
             addNotification("Slot booked successfully!", "success");
-            navigate('/player/my-bookings');
+            navigate('/user/bookings');
         } catch (e) {
             console.error("Booking failed:", e);
             addNotification(e.response?.data?.message || "Booking failed. Please try again.", "error");
@@ -105,12 +114,24 @@ export default function BookSlot() {
                 <div className="bg-white rounded-2xl shadow-xl overflow-hidden animate-fade-in-up">
                     <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-8 relative overflow-hidden">
                         <div className="relative z-10">
-                            <h2 className="text-3xl font-bold text-white">Book {ground?.name || "Your Slot"}</h2>
+                            <h2 className="text-3xl font-bold text-white">Book {venue?.name || "Your Slot"}</h2>
                             <p className="text-indigo-100 mt-2 text-lg">
-                                {ground?.venue?.name ? `${ground.venue.name}, ${ground.venue.location}` : "Reserve your venue and get ready to play."}
+                                {venue?.address ? `${venue.name}, ${venue.address}` : "Reserve your venue and get ready to play."}
                             </p>
-                            {ground?.pricePerHour && (
-                                <p className="text-white mt-4 font-bold text-xl">₹{ground.pricePerHour} / hour</p>
+                            {venue?.pricePerHour && (
+                                <p className="text-white mt-4 font-bold text-xl">₹{venue.pricePerHour} / hour</p>
+                            )}
+                            {venue?.locationLink && (
+                                <button
+                                    onClick={() => window.open(venue.locationLink, "_blank")}
+                                    className="mt-4 inline-flex items-center px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors backdrop-blur-sm border border-white/30"
+                                >
+                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    📍 View Location
+                                </button>
                             )}
                         </div>
                         {/* Background decoration */}
@@ -124,6 +145,7 @@ export default function BookSlot() {
                                 <input
                                     type="date"
                                     required
+                                    value={date}
                                     className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all shadow-sm"
                                     onChange={e => setDate(e.target.value)}
                                 />
@@ -150,6 +172,7 @@ export default function BookSlot() {
                                 <input
                                     type="time"
                                     required
+                                    value={startTime}
                                     className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all shadow-sm"
                                     onChange={e => setStartTime(e.target.value)}
                                 />
@@ -160,6 +183,7 @@ export default function BookSlot() {
                                 <input
                                     type="time"
                                     required
+                                    value={endTime}
                                     className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all shadow-sm"
                                     onChange={e => setEndTime(e.target.value)}
                                 />

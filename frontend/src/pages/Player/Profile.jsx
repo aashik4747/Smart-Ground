@@ -18,6 +18,9 @@ export default function Profile() {
             try {
                 setLoading(true);
                 const res = await getProfile();
+                if (!res.data) {
+                    throw new Error("No profile data received from server");
+                }
                 setProfile(res.data);
                 setFormData(res.data);
                 if (!res.data.turfId) {
@@ -25,6 +28,9 @@ export default function Profile() {
                 }
             } catch (error) {
                 console.error("Failed to fetch profile:", error);
+                console.error("Error response:", error.response);
+                console.error("Error message:", error.message);
+                console.error("Error status:", error.response?.status);
                 addNotification("Failed to load profile.", "error");
             } finally {
                 setLoading(false);

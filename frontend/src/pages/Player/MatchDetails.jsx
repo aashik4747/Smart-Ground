@@ -20,11 +20,20 @@ export default function MatchDetails() {
         const fetchMatch = async () => {
             try {
                 setLoading(true);
+                console.log("Fetching match details for ID:", id);
                 const res = await getMatchDetails(id);
+                console.log("Match details response:", res);
+                if (!res.data) {
+                    throw new Error("No match data received");
+                }
                 setMatch(res.data);
             } catch (error) {
-                console.error("Failed to fetch match details", error);
+                console.error("Failed to fetch match details:", error);
+                console.error("Error response:", error.response);
+                console.error("Error message:", error.message);
+                console.error("Error status:", error.response?.status);
                 addNotification("Failed to load match details", "error");
+                setMatch(null); // Ensure match is null on error
             } finally {
                 setLoading(false);
             }
@@ -135,6 +144,19 @@ export default function MatchDetails() {
         </div>
     );
 
+    // Safety check to ensure match has required properties
+    if (!match._id) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex flex-col">
+                <Navbar />
+                <div className="flex-grow flex justify-center items-center">
+                    <p className="text-gray-500 text-lg">Invalid match data.</p>
+                </div>
+                <Footer />
+            </div>
+        );
+    }
+
     const joinedCount = match.joinedPlayers?.length || 0;
     const maxPlayers = match.requiredPlayers || 0;
     const isFull = joinedCount >= maxPlayers;
@@ -148,7 +170,8 @@ export default function MatchDetails() {
     const isWaitlisted = match.waitlistedPlayers?.some(p => p._id === userId || p === userId);
     const isCancelled = match.status === "cancelled";
 
-    return (
+    try {
+        return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <Navbar />
 
@@ -369,5 +392,17 @@ export default function MatchDetails() {
 
             <Footer />
         </div>
-    );
+        );
+    } catch (error) {
+        console.error("Render error in MatchDetails:", error);
+        return (
+            <div className="min-h-screen bg-gray-50 flex flex-col">
+                <Navbar />
+                <div className="flex-grow flex justify-center items-center">
+                    <p className="text-gray-500 text-lg">Error loading match details.</p>
+                </div>
+                <Footer />
+            </div>
+        );
+    }
 }

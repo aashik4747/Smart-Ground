@@ -3,35 +3,17 @@ import Navbar from "../../components/common/Navbar";
 import Footer from "../../components/common/Footer";
 import useAuth from "../../hooks/useAuth";
 
-const FeatureCard = ({ title, desc, link, icon, color, delay }) => (
-    <Link to={link} className={`block group animate-fade-in-up`} style={{ animationDelay: delay }}>
-        <div className="bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 p-8 border border-gray-100 h-full relative overflow-hidden transform hover:-translate-y-2">
-            <div className={`absolute top-0 right-0 w-32 h-32 transform translate-x-10 -translate-y-10 rounded-full ${color} opacity-10 group-hover:scale-150 transition-transform duration-700 ease-out`}></div>
-            <div className="absolute bottom-0 left-0 w-24 h-24 transform -translate-x-8 translate-y-8 rounded-full bg-gray-50 group-hover:bg-gray-100 transition-colors duration-500"></div>
-
+const QuickActionCard = ({ title, desc, link, icon, color }) => (
+    <Link to={link} className="block group">
+        <div className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 p-6 border border-gray-100 h-full relative overflow-hidden">
+            <div className={`absolute top-0 right-0 w-20 h-20 transform translate-x-8 -translate-y-8 rounded-full ${color} opacity-10 group-hover:scale-150 transition-transform duration-500 ease-out`}></div>
             <div className="relative z-10">
-                <div className="text-5xl mb-6 transform group-hover:scale-110 transition-transform duration-300 drop-shadow-sm">{icon}</div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-indigo-600 transition-colors">{title}</h3>
-                <p className="text-gray-500 leading-relaxed text-lg">{desc}</p>
-            </div>
-
-            <div className="mt-8 flex items-center text-indigo-600 font-bold opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-                <span>Explore Now</span>
-                <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                <div className="text-4xl mb-4">{icon}</div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
+                <p className="text-gray-500 text-sm">{desc}</p>
             </div>
         </div>
     </Link>
-);
-
-const StepCard = ({ number, title, desc }) => (
-    <div className="flex flex-col items-center text-center relative z-10">
-        <div className="w-16 h-16 rounded-full bg-indigo-600 text-white flex items-center justify-center text-2xl font-bold shadow-lg mb-6 relative">
-            {number}
-            <div className="absolute inset-0 bg-indigo-600 rounded-full animate-ping opacity-20"></div>
-        </div>
-        <h3 className="text-xl font-bold text-gray-900 mb-3">{title}</h3>
-        <p className="text-gray-500 max-w-xs">{desc}</p>
-    </div>
 );
 
 export default function Home() {
@@ -41,123 +23,170 @@ export default function Home() {
             <Navbar />
 
             <div className="flex-grow">
-                {/* Hero Section */}
-                <div className="relative bg-indigo-900 text-white overflow-hidden min-h-[85vh] flex items-center">
-                    <div className="absolute inset-0 z-0">
-                        <img
-                            src="https://images.unsplash.com/photo-1579952363873-27f3bade9f55?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
-                            alt="Sports Stadium"
-                            className="w-full h-full object-cover opacity-20 mix-blend-overlay"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-purple-900/90 to-black/80"></div>
-                        <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-gray-50 to-transparent"></div>
+                {/* Welcome Header */}
+                <div className="bg-white border-b border-gray-100">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h1 className="text-2xl font-bold text-gray-900">
+                                    Welcome back, {user?.name?.split(' ')[0] || 'Player'}!
+                                </h1>
+                                <p className="text-gray-500 mt-1">Here's what's happening with your sports activities.</p>
+                            </div>
+                            <div className="hidden sm:flex items-center gap-4">
+                                <Link 
+                                    to="/player/grounds" 
+                                    className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors text-sm"
+                                >
+                                    Book Venue
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    {/* Quick Stats */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-gray-500 text-sm">Upcoming Bookings</p>
+                                    <p className="text-3xl font-bold text-gray-900 mt-1">3</p>
+                                </div>
+                                <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+                                    <span className="text-2xl">📅</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-gray-500 text-sm">Total Matches</p>
+                                    <p className="text-3xl font-bold text-gray-900 mt-1">12</p>
+                                </div>
+                                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                                    <span className="text-2xl">⚽</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-gray-500 text-sm">Reliability Score</p>
+                                    <p className="text-3xl font-bold text-gray-900 mt-1">98%</p>
+                                </div>
+                                <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
+                                    <span className="text-2xl">⭐</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-gray-500 text-sm">Total Spent</p>
+                                    <p className="text-3xl font-bold text-gray-900 mt-1">$450</p>
+                                </div>
+                                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                                    <span className="text-2xl">💰</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-56 flex flex-col items-center text-center">
-                        <span className="inline-block py-2 px-4 rounded-full bg-indigo-800/50 border border-indigo-500/30 text-indigo-200 text-sm font-bold tracking-widest uppercase mb-8 animate-fade-in backdrop-blur-sm">
-                            The Ultimate Sports Platform
-                        </span>
-                        <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight mb-8 animate-fade-in-up leading-tight">
-                            Welcome, {user?.name?.split(' ')[0] || 'Player'}! <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Game On.</span>
-                        </h1>
-                        <p className="max-w-2xl text-xl md:text-2xl text-indigo-100/90 mb-12 leading-relaxed animate-fade-in-up animation-delay-200 font-light">
-                            Book top-rated venues, find matches, and join a community of sports enthusiasts. Your next game is just a click away.
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-6 w-full sm:w-auto animate-fade-in-up animation-delay-400">
-                            <Link to="/player/grounds" className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-200 bg-indigo-600 font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 hover:bg-indigo-700 shadow-lg hover:shadow-indigo-500/30 transform hover:-translate-y-1">
-                                Book a Venue
-                                <svg className="w-5 h-5 ml-2 -mr-1 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+                    {/* Quick Actions */}
+                    <div className="mb-8">
+                        <h2 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <QuickActionCard
+                                title="Book Venue"
+                                desc="Find and book sports grounds"
+                                link="/player/grounds"
+                                icon="🏟️"
+                                color="bg-blue-500"
+                            />
+                            <QuickActionCard
+                                title="Find Matches"
+                                desc="Join or create matches"
+                                link="/player/matches"
+                                icon="⚽"
+                                color="bg-green-500"
+                            />
+                            <QuickActionCard
+                                title="My Bookings"
+                                desc="View upcoming and past bookings"
+                                link="/player/bookings"
+                                icon="📅"
+                                color="bg-purple-500"
+                            />
+                            <QuickActionCard
+                                title="Profile"
+                                desc="Manage your account settings"
+                                link="/player/profile"
+                                icon="👤"
+                                color="bg-orange-500"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Upcoming Booking */}
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-bold text-gray-900">Upcoming Booking</h2>
+                            <Link to="/player/bookings" className="text-indigo-600 text-sm font-medium hover:text-indigo-700">
+                                View All
                             </Link>
-                            <Link to="/player/matches" className="inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-indigo-900 transition-all duration-200 bg-white border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white hover:bg-gray-50 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
-                                Find Matches
-                            </Link>
                         </div>
-                    </div>
-                </div>
-
-                {/* Feature Cards - Overlapping Hero */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 relative z-20">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <FeatureCard
-                            title="Search Venues"
-                            desc="Find the perfect venue for your next match. Filter by sport, location, and amenities."
-                            link="/player/grounds"
-                            color="bg-blue-500"
-                            icon="🏟️"
-                            delay="0ms"
-                        />
-                        <FeatureCard
-                            title="Browse Matches"
-                            desc="Looking for a team? Browse existing matches and request to join them instantly."
-                            link="/player/matches"
-                            color="bg-green-500"
-                            icon="⚽"
-                            delay="200ms"
-                        />
-                        <FeatureCard
-                            title="My Bookings"
-                            desc="Manage your upcoming games, view booking history, and track metrics."
-                            link="/player/bookings"
-                            color="bg-purple-500"
-                            icon="📅"
-                            delay="400ms"
-                        />
-                    </div>
-                </div>
-
-                {/* How It Works Section */}
-                <div className="py-24 bg-gray-50">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="text-center mb-16">
-                            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-                                How It Works
-                            </h2>
-                            <p className="mt-4 text-xl text-gray-500 max-w-2xl mx-auto">
-                                Get started in three simple steps.
-                            </p>
-                        </div>
-
-                        <div className="relative">
-                            {/* Connector Line (Desktop) */}
-                            <div className="hidden md:block absolute top-8 left-1/6 right-1/6 h-0.5 bg-gray-200 z-0"></div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-                                <StepCard
-                                    number="1"
-                                    title="Find a Spot"
-                                    desc="Search for venues near you or browse available match slots."
-                                />
-                                <StepCard
-                                    number="2"
-                                    title="Book Instantly"
-                                    desc="Select your time, confirm your details, and pay securely online."
-                                />
-                                <StepCard
-                                    number="3"
-                                    title="Play & Enjoy"
-                                    desc="Show up at the venue, verify your booking, and have a great game."
-                                />
+                        <div className="bg-gray-50 rounded-lg p-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-16 h-16 bg-indigo-100 rounded-xl flex items-center justify-center">
+                                        <span className="text-3xl">🏟️</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-gray-900">Elite Sports Arena</h3>
+                                        <p className="text-sm text-gray-500">Football • Alpha Pitch</p>
+                                        <p className="text-sm text-gray-500 mt-1">Tomorrow, 10:00 AM - 12:00 PM</p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-lg font-bold text-gray-900">$40</p>
+                                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Confirmed</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Stats Section */}
-                <div className="bg-white py-24 border-t border-gray-100">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="grid grid-cols-1 gap-10 sm:grid-cols-3 text-center">
-                            <div className="p-8 rounded-2xl bg-indigo-50/50 hover:bg-indigo-50 transition-colors">
-                                <div className="text-6xl font-black text-indigo-600 mb-2 tracking-tighter">500+</div>
-                                <div className="text-lg font-semibold text-gray-600 uppercase tracking-wide">Premium Venues</div>
+                    {/* Recent Activity */}
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h2 className="text-lg font-bold text-gray-900 mb-4">Recent Activity</h2>
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                    <span className="text-xl">✅</span>
+                                </div>
+                                <div className="flex-grow">
+                                    <p className="text-sm font-medium text-gray-900">Booking confirmed at Elite Sports Arena</p>
+                                    <p className="text-xs text-gray-500">2 hours ago</p>
+                                </div>
                             </div>
-                            <div className="p-8 rounded-2xl bg-purple-50/50 hover:bg-purple-50 transition-colors">
-                                <div className="text-6xl font-black text-purple-600 mb-2 tracking-tighter">2k+</div>
-                                <div className="text-lg font-semibold text-gray-600 uppercase tracking-wide">Matches Organized</div>
+                            <div className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <span className="text-xl">⚽</span>
+                                </div>
+                                <div className="flex-grow">
+                                    <p className="text-sm font-medium text-gray-900">Joined match "Weekend Football Derby"</p>
+                                    <p className="text-xs text-gray-500">Yesterday</p>
+                                </div>
                             </div>
-                            <div className="p-8 rounded-2xl bg-pink-50/50 hover:bg-pink-50 transition-colors">
-                                <div className="text-6xl font-black text-pink-600 mb-2 tracking-tighter">10k+</div>
-                                <div className="text-lg font-semibold text-gray-600 uppercase tracking-wide">Active Players</div>
+                            <div className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                    <span className="text-xl">📅</span>
+                                </div>
+                                <div className="flex-grow">
+                                    <p className="text-sm font-medium text-gray-900">Completed booking at Greenfield Stadium</p>
+                                    <p className="text-xs text-gray-500">3 days ago</p>
+                                </div>
                             </div>
                         </div>
                     </div>

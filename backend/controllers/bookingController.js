@@ -110,7 +110,7 @@ exports.createBooking = async (req, res) => {
 exports.getMyBookings = async (req, res) => {
     try {
         const bookings = await Booking.find({ userId: req.user.id })
-            .populate("venueId", "name address city state images pricePerHour sports")
+            .populate("venueId", "name location city state images pricePerHour sports description")
             .sort({ createdAt: -1 });
 
         res.json({ success: true, bookings });

@@ -7,7 +7,12 @@ export const updateUserStatus = (id, status) => API.put(`/admin/users/${id}/stat
 export const getAdminStats = () => API.get("/admin/stats");
 
 // User
-export const getProfile = () => API.get("/users/me");
+export const getProfile = () => API.get("/users/me").catch(error => {
+    console.error("getProfile error:", error);
+    console.error("Error response:", error.response);
+    console.error("Error message:", error.message);
+    throw error;
+});
 export const setInitialUserRole = (role) => API.post("/users/role", { role });
 export const updateProfile = (data) => API.put("/users/me", data);
 export const changePassword = (data) => API.put("/users/change-password", data);

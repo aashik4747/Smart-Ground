@@ -3,6 +3,7 @@ const router = express.Router();
 const adminController = require("../controllers/adminController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const adminMiddleware = require("../middlewares/adminMiddleware");
+const upload = require("../middlewares/uploadMiddleware");
 const { validateVenue } = require("../middlewares/validateVenue");
 const { checkValidation } = require("../middlewares/validate");
 
@@ -15,13 +16,14 @@ router.use(authMiddleware);
 router.use(adminMiddleware);
 
 router.get("/stats", adminController.getDashboardStats);
+router.get("/booking-stats", adminController.getBookingStats);
 router.get("/users", adminController.getAllUsers);
 router.put("/users/:id", adminController.updateUser);
 router.delete("/users/:id", adminController.deleteUser);
 
 router.get("/venues", adminController.getAllVenues);
-router.post("/venues", validateVenue, checkValidation, adminController.createVenue);
-router.put("/venues/:id", adminController.updateVenue);
+router.post("/venues", upload.array('images', 10), adminController.createVenue);
+router.put("/venues/:id", upload.array('images', 10), adminController.updateVenue);
 router.delete("/venues/:id", adminController.deleteVenue);
 router.put("/venues/:id/approve", adminController.approveVenue);
 
@@ -37,6 +39,10 @@ router.get("/matches", adminController.getAllMatches);
 router.put("/matches/:id/approve", adminController.approveMatch);
 router.put("/matches/:id/reject", adminController.rejectMatch);
 router.get("/stalls", adminController.getAllStalls);
+router.post("/stalls", adminController.createStall);
+router.put("/stalls/:id", adminController.updateStall);
+router.delete("/stalls/:id", adminController.deleteStall);
+router.put("/stalls/:id/approve", adminController.approveStall);
 router.get("/payments", adminController.getAllPayments);
 
 module.exports = router;
