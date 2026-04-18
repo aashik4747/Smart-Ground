@@ -87,19 +87,47 @@ exports.getAllVenues = async (req, res) => {
 
 exports.createVenue = async (req, res) => {
     try {
-        const { name, location, state, city, manager } = req.body;
+        const venueData = { ...req.body };
+        
+        // Parse sports and amenities if sent as JSON strings
+        if (venueData.sports && typeof venueData.sports === 'string') {
+            try {
+                venueData.sports = JSON.parse(venueData.sports);
+            } catch (e) {
+                console.error("Error parsing sports:", e);
+            }
+        }
+        
+        if (venueData.amenities && typeof venueData.amenities === 'string') {
+            try {
+                venueData.amenities = JSON.parse(venueData.amenities);
+            } catch (e) {
+                console.error("Error parsing amenities:", e);
+            }
+        }
+        
+        // Handle image uploads
+        if (req.files && req.files.length > 0) {
+            venueData.images = req.files.map(file => `/uploads/${file.filename}`);
+        }
+        
+        // Set default location coordinates if not provided
+        if (!venueData.location || !venueData.location.coordinates) {
+            venueData.location = {
+                type: 'Point',
+                coordinates: [77.2090, 28.6139] // Default Delhi coordinates
+            };
+        }
         
         const venue = await Venue.create({
-            name,
-            location,
-            state,
-            city,
-            manager: manager || null,
+            ...venueData,
+            manager: venueData.manager || null,
             approved: true // Admin created venues are auto-approved
         });
         
         res.status(201).json({ message: "Venue created successfully", venue });
     } catch (error) {
+        console.error("[adminController.createVenue] Error:", error.message);
         res.status(500).json({ message: "Server Error", error: error.message });
     }
 };
@@ -107,21 +135,45 @@ exports.createVenue = async (req, res) => {
 exports.updateVenue = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, location, state, city, manager, approved } = req.body;
+        const venueData = { ...req.body };
         
         const venue = await Venue.findById(id);
         if (!venue) return res.status(404).json({ message: "Venue not found" });
         
-        if (name) venue.name = name;
-        if (location) venue.location = location;
-        if (state) venue.state = state;
-        if (city) venue.city = city;
-        if (manager !== undefined) venue.manager = manager;
-        if (approved !== undefined) venue.approved = approved;
+        // Parse sports and amenities if sent as JSON strings
+        if (venueData.sports && typeof venueData.sports === 'string') {
+            try {
+                venueData.sports = JSON.parse(venueData.sports);
+            } catch (e) {
+                console.error("Error parsing sports:", e);
+            }
+        }
+        
+        if (venueData.amenities && typeof venueData.amenities === 'string') {
+            try {
+                venueData.amenities = JSON.parse(venueData.amenities);
+            } catch (e) {
+                console.error("Error parsing amenities:", e);
+            }
+        }
+        
+        // Handle image uploads (append new images to existing ones)
+        if (req.files && req.files.length > 0) {
+            const newImages = req.files.map(file => `/uploads/${file.filename}`);
+            venueData.images = [...(venue.images || []), ...newImages];
+        }
+        
+        // Update venue with new data
+        Object.keys(venueData).forEach(key => {
+            if (venueData[key] !== undefined) {
+                venue[key] = venueData[key];
+            }
+        });
         
         await venue.save();
         res.json({ message: "Venue updated successfully", venue });
     } catch (error) {
+        console.error("[adminController.updateVenue] Error:", error.message);
         res.status(500).json({ message: "Server Error", error: error.message });
     }
 };
@@ -315,6 +367,106 @@ exports.getVenueManagerStats = async (req, res) => {
             pendingVenues
         });
     } catch (error) {
+        res.status(500).json({ message: "Server Error", error: error.message });
+    }
+};
+
+// Booking Stats (total bookings and revenue)
+exports.getBookingStats = async (req, res) => {
+    try {
+        const bookings = await Booking.find();
+        const totalBookings = bookings.length;
+        const totalRevenue = bookings.reduce((sum, booking) => {
+            return sum + (booking.totalPrice || 0);
+        }, 0);
+        
+        // Get revenue by status
+        const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
+        const confirmedRevenue = confirmedBookings.reduce((sum, booking) => {
+            return sum + (booking.totalPrice || 0);
+        }, 0);
+        
+        res.json({
+            totalBookings,
+            totalRevenue,
+            confirmedBookings: confirmedBookings.length,
+            confirmedRevenue
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Server Error", error: error.message });
+    }
+};
+
+// Stall Management
+exports.createStall = async (req, res) => {
+    try {
+        const { eventName, price, owner } = req.body;
+        
+        const stall = await Stall.create({
+            eventName,
+            price,
+            owner: owner || null,
+            approved: true // Admin created stalls are auto-approved
+        });
+        
+        res.status(201).json({ message: "Stall created successfully", stall });
+    } catch (error) {
+        console.error("[adminController.createStall] Error:", error.message);
+        res.status(500).json({ message: "Server Error", error: error.message });
+    }
+};
+
+exports.updateStall = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { eventName, price, owner, approved } = req.body;
+        
+        const stall = await Stall.findById(id);
+        if (!stall) return res.status(404).json({ message: "Stall not found" });
+        
+        if (eventName) stall.eventName = eventName;
+        if (price !== undefined) stall.price = price;
+        if (owner !== undefined) stall.owner = owner;
+        if (approved !== undefined) stall.approved = approved;
+        
+        await stall.save();
+        res.json({ message: "Stall updated successfully", stall });
+    } catch (error) {
+        console.error("[adminController.updateStall] Error:", error.message);
+        res.status(500).json({ message: "Server Error", error: error.message });
+    }
+};
+
+exports.deleteStall = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const stall = await Stall.findById(id);
+        if (!stall) return res.status(404).json({ message: "Stall not found" });
+        
+        await Stall.findByIdAndDelete(id);
+        res.json({ message: "Stall deleted successfully" });
+    } catch (error) {
+        console.error("[adminController.deleteStall] Error:", error.message);
+        res.status(500).json({ message: "Server Error", error: error.message });
+    }
+};
+
+exports.approveStall = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const stall = await Stall.findByIdAndUpdate(
+            id,
+            { approved: true },
+            { new: true }
+        ).populate("owner", "name email");
+        
+        if (!stall) return res.status(404).json({ message: "Stall not found" });
+        
+        res.json({ message: "Stall approved successfully", stall });
+    } catch (error) {
+        console.error("[adminController.approveStall] Error:", error.message);
         res.status(500).json({ message: "Server Error", error: error.message });
     }
 };

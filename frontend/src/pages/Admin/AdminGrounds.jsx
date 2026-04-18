@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "../../components/common/DashboardLayout";
 import Loader from "../../components/common/Loader";
-import { getAllGrounds, createGround, updateGround, deleteGround } from "../../services/adminService";
-import { getAllVenues } from "./adminService";
+import { getAllGrounds, createGround, updateGround, deleteGround, getAllVenues } from "../../services/adminService";
 import { useToast } from "../../components/common/Toast";
 import { SPORT_CONFIGS } from "../../utils/sportImageGenerator";
 

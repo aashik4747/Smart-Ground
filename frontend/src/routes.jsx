@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Loader from './components/common/Loader';
 
@@ -76,6 +76,14 @@ const AppRoutes = () => {
             <Route path="/register" element={<Register />} />
             <Route path="/verify-otp" element={<VerifyOTP />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/player/grounds" element={<Navigate to="/user/grounds" replace />} />
+            <Route path="/player/matches" element={<Navigate to="/user/matches" replace />} />
+            <Route path="/player/bookings" element={<Navigate to="/user/bookings" replace />} />
+            <Route path="/player/profile" element={<Navigate to="/user/profile" replace />} />
+            <Route path="/player/match/:id" element={<Navigate to={({ params }) => `/user/match/${params.id}`} replace />} />
+            <Route path="/player/match-chat/:id" element={<Navigate to={({ params }) => `/user/match-chat/${params.id}`} replace />} />
+            <Route path="/player/my-matches" element={<Navigate to="/user/my-matches" replace />} />
+            <Route path="/player/book-venue/:id" element={<Navigate to={({ params }) => `/user/book-venue/${params.id}`} replace />} />
 
             {/* Protected Routes - Common */}
             <Route element={<ProtectedRoute />}>

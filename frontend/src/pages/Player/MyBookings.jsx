@@ -23,13 +23,17 @@ export default function MyBookings() {
                     getMyMatches().catch(() => ({ data: [] }))
                 ]);
 
-                const bookings = (bookingsRes.data || []).map(b => ({
+                // Ensure data is always an array
+                const bookingsData = Array.isArray(bookingsRes.data) ? bookingsRes.data : (Array.isArray(bookingsRes) ? bookingsRes : []);
+                const matchesData = Array.isArray(matchesRes.data) ? matchesRes.data : (Array.isArray(matchesRes) ? matchesRes : []);
+
+                const bookings = bookingsData.map(b => ({
                     ...b,
                     _type: 'booking',
                     _sortDate: new Date(b.date)
                 }));
-                
-                const matches = (matchesRes.data || []).map(m => ({
+
+                const matches = matchesData.map(m => ({
                     ...m,
                     _type: 'match',
                     _sortDate: m.date ? new Date(m.date) : new Date()
@@ -46,7 +50,7 @@ export default function MyBookings() {
         };
 
         fetchData();
-    }, [addNotification]);
+    }, []); // Removed addNotification to prevent infinite re-renders
 
     const filteredItems = combinedItems.filter(item => {
         // Filter by Status/Time

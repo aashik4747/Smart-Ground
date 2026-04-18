@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const auth = require("../middlewares/authMiddleware");
 const role = require("../middlewares/roleMiddleware");
+const upload = require("../middlewares/uploadMiddleware");
 const {
     getVenues,
     approveVenue,
@@ -19,8 +20,8 @@ router.get("/:id", getVenueById);
 router.get("/:venueId/slots/:date", getAvailableSlots);
 
 // Manager routes
-router.post("/", auth, role("manager"), createVenue);
-router.put("/:id", auth, role("manager"), updateVenue);
+router.post("/", auth, role("manager"), upload.array('images', 10), createVenue);
+router.put("/:id", auth, role("manager"), upload.array('images', 10), updateVenue);
 router.delete("/:id", auth, role("manager"), deleteVenue);
 router.get("/my-venues", auth, role("manager"), getMyVenues);
 

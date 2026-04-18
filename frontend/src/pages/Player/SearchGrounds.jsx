@@ -26,13 +26,14 @@ export default function SearchGrounds() {
     const [useLocation, setUseLocation] = useState(false);
     const [userLocation, setUserLocation] = useState(null);
     const [maxDistance, setMaxDistance] = useState(50); // Default 50km
+    const [imageErrors, setImageErrors] = useState({});
     const { success, error: showError } = useToast();
 
     const itemsPerPage = 9;
 
     const sportsCategories = [
         { name: "All", image: "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=500&q=80" },
-        { name: "Football", image: "https://images.unsplash.com/photo-1518605368461-1ee7c5cd1536?w=500&q=80" },
+        { name: "Football", image: "https://media.newyorker.com/photos/6543f23235570d74bd3ef32e/master/w_2560,c_limit/Akam-Pelly%20Ruddock%20Mpanzu.jpg" },
         { name: "Cricket", image: "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=500&q=80" },
         { name: "Badminton", image: "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=500&q=80" },
         { name: "Tennis", image: "https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=500&q=80" },
@@ -66,57 +67,50 @@ export default function SearchGrounds() {
     };
 
     // Enhanced search with debouncing
-    const debouncedSearch = useCallback(
-        useMemo(() => {
-            const timer = setTimeout(() => {
-                setLoading(true);
-                // Fetch venues with location-based search if enabled
-                const lat = useLocation && userLocation ? userLocation.lat : null;
-                const lng = useLocation && userLocation ? userLocation.lng : null;
-                
-                getAllVenues(
-                    search, 
-                    selectedState, 
-                    selectedCity, 
-                    sportFilter === "All" ? null : sportFilter,
-                    lat,
-                    lng,
-                    maxDistance
-                )
-                    .then(res => {
-                        const data = res.data || [];
-                        setVenues(data);
-                        setError(null);
-                        if (data.length === 0 && (search || selectedState || selectedCity || sportFilter !== "All" || useLocation)) {
-                            showError("No venues found matching your criteria");
-                        }
-                    })
-                    .catch(err => {
-                        console.error("Failed to fetch venues", err);
-                        setError("Failed to load venues. Please try again.");
-                        setVenues([]);
-                        showError("Failed to load venues");
-                    })
-                    .finally(() => setLoading(false));
-            }, 500); // 500ms debounce
-
-            return () => clearTimeout(timer);
-        }, [search, selectedState, selectedCity, sportFilter, useLocation, userLocation, maxDistance, showError]),
-        [search, selectedState, selectedCity, sportFilter, useLocation, userLocation, maxDistance, showError]
-    );
-
     useEffect(() => {
-        debouncedSearch();
-    }, [debouncedSearch]);
+        const timer = setTimeout(() => {
+            setLoading(true);
+            // Fetch venues with location-based search if enabled
+            const lat = useLocation && userLocation ? userLocation.lat : null;
+            const lng = useLocation && userLocation ? userLocation.lng : null;
+            
+            getAllVenues(
+                search, 
+                selectedState, 
+                selectedCity, 
+                sportFilter === "All" ? null : sportFilter,
+                lat,
+                lng,
+                maxDistance
+            )
+                .then(res => {
+                    const data = res.data || [];
+                    setVenues(data);
+                    setError(null);
+                    if (data.length === 0 && (search || selectedState || selectedCity || sportFilter !== "All" || useLocation)) {
+                        showError("No venues found matching your criteria");
+                    }
+                })
+                .catch(err => {
+                    console.error("Failed to fetch venues", err);
+                    setError("Failed to load venues. Please try again.");
+                    setVenues([]);
+                    showError("Failed to load venues");
+                })
+                .finally(() => setLoading(false));
+        }, 500); // 500ms debounce
+
+        return () => clearTimeout(timer);
+    }, [search, selectedState, selectedCity, sportFilter, useLocation, userLocation, maxDistance]); // Removed showError to prevent infinite re-renders
 
     useEffect(() => {
         // Filter venues based on sport (already filtered in backend, but this ensures client-side filtering too)
         if (sportFilter === "All") {
             setFilteredVenues(venues);
         } else {
-            // Only show venues that have grounds matching the selected sport
-            const filtered = venues.filter(venue => 
-                venue.grounds?.some(g => g.sport?.toLowerCase() === sportFilter.toLowerCase())
+            // Only show venues that have the selected sport in their sports array
+            const filtered = venues.filter(venue =>
+                venue.sports?.some(s => s.toLowerCase() === sportFilter.toLowerCase())
             );
             setFilteredVenues(filtered);
         }
@@ -134,7 +128,21 @@ export default function SearchGrounds() {
 
     // Helper function to get venue display image
     const getVenueImage = (venue) => {
-        // Use first ground's image if available, otherwise generate based on venue sports
+        // Use venue's images array first (from the venues collection)
+        if (venue.images && venue.images.length > 0) {
+            const firstImage = venue.images[0];
+            // If it's already a full URL, return as is
+            if (firstImage.startsWith('http')) {
+                return firstImage;
+            }
+            // If it starts with /uploads/, return as-is (will use Vite proxy)
+            if (firstImage.startsWith('/uploads/')) {
+                return firstImage;
+            }
+            // Otherwise, assume it's a relative path and prepend /uploads/
+            return `/uploads/${firstImage}`;
+        }
+        // Fallback to first ground's image if available
         if (venue.grounds && venue.grounds.length > 0) {
             const firstGround = venue.grounds[0];
             return getSportImage(firstGround.imageUrl, firstGround.sport, firstGround._id, firstGround.name);
@@ -163,6 +171,10 @@ export default function SearchGrounds() {
     const handleSuggestionSelect = (suggestion) => {
         setSearch(suggestion);
         success(`Searching for "${suggestion}"`);
+    };
+
+    const handleImageError = (venueId) => {
+        setImageErrors(prev => ({ ...prev, [venueId]: true }));
     };
 
     return (
@@ -346,21 +358,29 @@ export default function SearchGrounds() {
                                         {/* Venue Card */}
                                         <div className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden">
                                             {/* Venue Header Image */}
-                                            <div className="relative h-48 overflow-hidden">
-                                                <img
-                                                    src={getVenueImage(venue)}
-                                                    alt={venue.name}
-                                                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                                                />
+                                            <div className="relative h-48 overflow-hidden bg-gray-200">
+                                                {imageErrors[venue._id] ? (
+                                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600">
+                                                        <span className="text-4xl">🏟️</span>
+                                                    </div>
+                                                ) : (
+                                                    <img
+                                                        src={getVenueImage(venue)}
+                                                        alt={venue.name}
+                                                        className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                                                        onError={() => handleImageError(venue._id)}
+                                                        loading="lazy"
+                                                    />
+                                                )}
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                                                 <div className="absolute bottom-4 left-4 right-4">
                                                     <h3 className="text-xl font-bold text-white">{venue.name}</h3>
                                                     <p className="text-white/90 text-sm flex items-center mt-1">
                                                         <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11 a3 3 0 11-6 0 3 3 0 016 0z" />
                                                         </svg>
-                                                        {[venue.location, venue.city, venue.state].filter(Boolean).join(', ')}
+                                                        {[venue.address, venue.city, venue.state].filter(Boolean).join(', ')}
                                                     </p>
                                                 </div>
                                                 {/* Sports Tags */}
@@ -449,7 +469,7 @@ export default function SearchGrounds() {
                                                 
                                                 {/* Book Button */}
                                                 <Link
-                                                    to={`/player/book-venue/${venue._id}`}
+                                                    to={`/user/book-venue/${venue._id}`}
                                                     className="block w-full text-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-200"
                                                 >
                                                     Book This Venue
@@ -473,12 +493,8 @@ export default function SearchGrounds() {
                     </div>
                 ) : (
                     <EmptyState
-                        title="No Venues Found"
-                        description={
-                            search || selectedState || selectedCity || sportFilter !== "All"
-                                ? `We couldn't find any venues matching your criteria. Try adjusting your filters or search terms.`
-                                : "No venues are available at the moment. Please check back later."
-                        }
+                        title="No Venues Available"
+                        description="There are no venues in the collection at the moment. Please check back later or contact support."
                         icon={
                             <svg className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -486,7 +502,7 @@ export default function SearchGrounds() {
                             </svg>
                         }
                         action={
-                            (search || selectedState || selectedCity || sportFilter !== "All") && (
+                            (search || selectedState || selectedCity || sportFilter !== "All" || useLocation) && (
                                 <button
                                     onClick={clearFilters}
                                     className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-indigo-700 bg-indigo-100 hover:bg-indigo-200 transition-colors"

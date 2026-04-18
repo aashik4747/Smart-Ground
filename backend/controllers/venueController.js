@@ -4,8 +4,41 @@ const Booking = require("../models/Booking");
 
 exports.createVenue = async (req, res) => {
     try {
+        const venueData = { ...req.body };
+        
+        // Parse sports and amenities if sent as JSON strings
+        if (venueData.sports && typeof venueData.sports === 'string') {
+            try {
+                venueData.sports = JSON.parse(venueData.sports);
+            } catch (e) {
+                console.error("Error parsing sports:", e);
+            }
+        }
+        
+        if (venueData.amenities && typeof venueData.amenities === 'string') {
+            try {
+                venueData.amenities = JSON.parse(venueData.amenities);
+            } catch (e) {
+                console.error("Error parsing amenities:", e);
+            }
+        }
+        
+        // Handle image uploads
+        if (req.files && req.files.length > 0) {
+            venueData.images = req.files.map(file => `/uploads/${file.filename}`);
+        }
+        
+        // Set default location coordinates if not provided (using state/city as placeholder)
+        if (!venueData.location || !venueData.location.coordinates) {
+            // For now, use a default location (should be improved with geocoding)
+            venueData.location = {
+                type: 'Point',
+                coordinates: [77.2090, 28.6139] // Default Delhi coordinates
+            };
+        }
+        
         const venue = await Venue.create({
-            ...req.body,
+            ...venueData,
             manager: req.user.id
         });
         res.status(201).json(venue);
@@ -58,7 +91,7 @@ exports.getVenues = async (req, res) => {
 
         // Sport filter
         if (sport) {
-            query.sports = { $in: [new RegExp(sport, "i")] };
+            query.sports = { $in: [new RegExp(`^${sport}$`, "i")] };
         }
 
         const venues = await Venue.find(query)
@@ -214,9 +247,34 @@ exports.updateVenue = async (req, res) => {
             return res.status(403).json({ success: false, message: "Not authorized to update this venue" });
         }
 
+        const venueData = { ...req.body };
+        
+        // Parse sports and amenities if sent as JSON strings
+        if (venueData.sports && typeof venueData.sports === 'string') {
+            try {
+                venueData.sports = JSON.parse(venueData.sports);
+            } catch (e) {
+                console.error("Error parsing sports:", e);
+            }
+        }
+        
+        if (venueData.amenities && typeof venueData.amenities === 'string') {
+            try {
+                venueData.amenities = JSON.parse(venueData.amenities);
+            } catch (e) {
+                console.error("Error parsing amenities:", e);
+            }
+        }
+        
+        // Handle image uploads (append new images to existing ones)
+        if (req.files && req.files.length > 0) {
+            const newImages = req.files.map(file => `/uploads/${file.filename}`);
+            venueData.images = [...(venue.images || []), ...newImages];
+        }
+        
         const updatedVenue = await Venue.findByIdAndUpdate(
             req.params.id,
-            req.body,
+            venueData,
             { new: true, runValidators: true }
         );
 

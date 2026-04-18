@@ -31,7 +31,7 @@ export default function BrowseMatches() {
         };
 
         fetchMatches();
-    }, [addNotification]);
+    }, []); // Removed addNotification to prevent infinite re-renders
 
     useEffect(() => {
         let results = matches;

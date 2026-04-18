@@ -1,23 +1,26 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "../../components/common/DashboardLayout";
 import Loader from "../../components/common/Loader";
-import { getAdminStats, getVenueManagerStats } from "../../services/adminService";
+import { getAdminStats, getVenueManagerStats, getBookingStats } from "../../services/adminService";
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState(null);
     const [venueStats, setVenueStats] = useState(null);
+    const [bookingStats, setBookingStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const [userData, venueData] = await Promise.all([
+                const [userData, venueData, bookingData] = await Promise.all([
                     getAdminStats(),
-                    getVenueManagerStats()
+                    getVenueManagerStats(),
+                    getBookingStats()
                 ]);
                 setStats(userData);
                 setVenueStats(venueData);
+                setBookingStats(bookingData);
                 setLoading(false);
             } catch (err) {
                 setError("Failed to load admin stats");
@@ -90,6 +93,38 @@ export default function AdminDashboard() {
                     icon="⏳"
                     color="bg-gradient-to-r from-yellow-400 to-yellow-600"
                     delay="200"
+                />
+            </div>
+
+            {/* Booking Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-fade-in-up animation-delay-200">
+                <StatCard
+                    title="Total Bookings"
+                    value={bookingStats?.totalBookings || 0}
+                    icon="📅"
+                    color="bg-gradient-to-r from-purple-400 to-purple-600"
+                    delay="0"
+                />
+                <StatCard
+                    title="Total Revenue"
+                    value={`₹${(bookingStats?.totalRevenue || 0).toLocaleString()}`}
+                    icon="💰"
+                    color="bg-gradient-to-r from-emerald-400 to-emerald-600"
+                    delay="100"
+                />
+                <StatCard
+                    title="Confirmed Bookings"
+                    value={bookingStats?.confirmedBookings || 0}
+                    icon="✓"
+                    color="bg-gradient-to-r from-teal-400 to-teal-600"
+                    delay="200"
+                />
+                <StatCard
+                    title="Confirmed Revenue"
+                    value={`₹${(bookingStats?.confirmedRevenue || 0).toLocaleString()}`}
+                    icon="💵"
+                    color="bg-gradient-to-r from-green-400 to-green-600"
+                    delay="300"
                 />
             </div>
 

@@ -5,6 +5,11 @@ export const getAdminStats = async () => {
     return response.data;
 };
 
+export const getBookingStats = async () => {
+    const response = await api.get('/admin/booking-stats');
+    return response.data;
+};
+
 export const getAllUsers = async (role) => {
     const url = role ? `/admin/users?role=${role}` : `/admin/users`;
     const response = await api.get(url);
@@ -27,12 +32,20 @@ export const getAllVenues = async () => {
 };
 
 export const createVenue = async (data) => {
-    const response = await api.post('/admin/venues', data);
+    const response = await api.post('/admin/venues', data, {
+        headers: {
+            'Content-Type': data instanceof FormData ? 'multipart/form-data' : 'application/json'
+        }
+    });
     return response.data;
 };
 
 export const updateVenue = async (id, data) => {
-    const response = await api.put(`/admin/venues/${id}`, data);
+    const response = await api.put(`/admin/venues/${id}`, data, {
+        headers: {
+            'Content-Type': data instanceof FormData ? 'multipart/form-data' : 'application/json'
+        }
+    });
     return response.data;
 };
 
@@ -68,6 +81,26 @@ export const rejectMatch = async (id) => {
 
 export const getAllStalls = async () => {
     const response = await api.get('/admin/stalls');
+    return response.data;
+};
+
+export const createStall = async (data) => {
+    const response = await api.post('/admin/stalls', data);
+    return response.data;
+};
+
+export const updateStall = async (id, data) => {
+    const response = await api.put(`/admin/stalls/${id}`, data);
+    return response.data;
+};
+
+export const deleteStall = async (id) => {
+    const response = await api.delete(`/admin/stalls/${id}`);
+    return response.data;
+};
+
+export const approveStall = async (id) => {
+    const response = await api.put(`/admin/stalls/${id}/approve`);
     return response.data;
 };
 

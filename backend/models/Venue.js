@@ -21,6 +21,10 @@ const venueSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    locationLink: {
+        type: String,
+        default: ""
+    },
     location: {
         type: {
             type: String,

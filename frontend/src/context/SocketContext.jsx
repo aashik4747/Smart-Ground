@@ -14,8 +14,8 @@ export const SocketProvider = ({ children }) => {
 
     useEffect(() => {
         if (user) {
-            // Initialize socket connection
-            const socketInstance = io(window.location.origin, {
+            // Initialize socket connection to backend server
+            const socketInstance = io("http://localhost:5000", {
                 path: "/socket.io",
                 query: {
                     userId: user._id,
