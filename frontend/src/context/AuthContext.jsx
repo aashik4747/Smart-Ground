@@ -86,7 +86,8 @@ export const AuthProvider = ({ children }) => {
             const res = await forgotPasswordService(data);
             return { success: true, msg: res.data.message || "Reset link sent" };
         } catch (error) {
-            return { success: false, msg: error.response?.data?.message || "Request failed" };
+            const errorMessage = error.response?.data?.message || error.response?.data?.error || "Request failed";
+            return { success: false, msg: errorMessage };
         }
     };
 
