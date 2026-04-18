@@ -42,6 +42,9 @@ const MatchChat = lazy(() => import('./pages/Player/MatchChat'));
 const Reviews = lazy(() => import('./pages/Player/Reviews'));
 const Profile = lazy(() => import('./pages/Player/Profile'));
 
+// Non-lazy import for debugging
+import MatchDetailsDebug from './pages/Player/MatchDetails';
+
 // Venue Manager Pages (deprecated - moved to admin)
 // const ManagerDashboard = lazy(() => import('./pages/VenueManager/ManagerDashboard'));
 // const ManageVenues = lazy(() => import('./pages/VenueManager/ManageVenues'));
@@ -101,7 +104,7 @@ const AppRoutes = () => {
               <Route path="/user/bookings" element={<MyBookings />} />
               <Route path="/user/matches" element={<BrowseMatches />} />
               <Route path="/user/my-matches" element={<MyMatches />} />
-              <Route path="/user/match/:id" element={<MatchDetails />} />
+              <Route path="/user/match/:id" element={<MatchDetailsDebug />} />
               <Route path="/user/match-chat/:id" element={<MatchChat />} />
               <Route path="/user/reviews" element={<Reviews />} />
               <Route path="/user/profile" element={<Profile />} />
@@ -132,6 +135,8 @@ const AppRoutes = () => {
 
             {/* Error Routes */}
             <Route path="/unauthorized" element={<Unauthorized />} />
+            {/* Test route for debugging */}
+            <Route path="/test-match" element={<div className="p-10 bg-red-500 text-white">TEST ROUTE WORKING</div>} />
             <Route path="*" element={<NotFound />} />
 
           </Routes>
